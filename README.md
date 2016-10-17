@@ -44,23 +44,19 @@ and click "OK".
 Select "Boby" and follow the installation procedure.
 After restarting your IDE boby should be available.
 
-#### Boby Application
+### Boby Application
 
 1. In your java project create a file "<name>.boby"
 Eclipse asks you if you want to convert your project into an Xtext project. Click "Yes".
-2. Now edit your boby file. You can start with the following example:
-
+2. Now edit your boby file. You can start with the example shown at the end of this section.
+See known issues to solve the **null error**.
+3. Boby creates java files in the src-gen folder, convert the folder into a src-package from the `context menu (right click) -> Build Path -> Use as Source Folder`. Generated sources should now be accessible from within your java code.
 
     package de.test {
-	    boby immutable TestVO {
-		  test: String
-	    }
+      boby immutable TestVO {
+        test: String
+      }
     }
-
-
-See known issues to solve the **null error**.
-
-3. Boby creates java files in the src-gen folder, convert the folder into a src-package from the `context menu (right click) -> Build Path -> Use as Source Folder`. Generated sources should now be accessible from within your java code.
 
 
 # Known issues
