@@ -35,10 +35,10 @@ representing an immutable value object, a generic and a concrete builder.
 ### Boby Installation
 
 
-1. Got to: `Help -> Install New Software...`
+1. In Eclipse go to: `Help -> Install New Software...`
 2. On the "Available Software" Dialog click "Add..."
 3. Copy into the Location field:
-jar:https://dl.dropboxusercontent.com/u/55014561/repo/de.jro.tools.boby.repository-1.0.0-SNAPSHOT.zip!/
+`jar:https://dl.dropboxusercontent.com/u/55014561/repo/de.jro.tools.boby.repository-1.0.0-SNAPSHOT.zip!/`
 
 and click "OK".
 Select "Boby" and follow the installation procedure.
