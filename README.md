@@ -61,5 +61,6 @@ See known issues to solve the **null error**.
 
 # Known issues
 
-1. null - See error logs for details.
+1. null - See error logs for details. (seems to be related to: https://bugs.eclipse.org/bugs/show_bug.cgi?id=495975)
+
 Workaround: Just make a little change and save your boby file again.
