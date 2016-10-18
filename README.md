@@ -61,9 +61,7 @@ See known issues to solve the **null error**.
 
 # Known issues
 
-1. null - See error logs for details. (seems to be related to: https://bugs.eclipse.org/bugs/show_bug.cgi?id=495975)
-
-Workaround: Just make a little change and save your boby file again.
+1. null - See error logs for details. (seems to be related to: https://bugs.eclipse.org/bugs/show_bug.cgi?id=495975) Workaround: Just make a little change and save your boby file again.
 
 2. Content assist leads to "<reference> cannot be resolved." in relative scenarios. This issue seems to be related to: https://bugs.eclipse.org/bugs/show_bug.cgi?id=495047
 
