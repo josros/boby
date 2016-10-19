@@ -84,6 +84,8 @@ local.properties
 **/src-gen/**
 **/xtend-gen/**
 **.xtendbin
+!**/src-gen/.gitkeep
+!**/xtend-gen/.gitkeep
 
 
 # Locally stored "Eclipse launch configurations"
