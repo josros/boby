@@ -81,9 +81,9 @@ local.properties
 # XText
 #######
 
-src-gen/**
-xtend-gen/**
-.xtendbin
+**/src-gen/**
+**/xtend-gen/**
+**.xtendbin
 
 
 # Locally stored "Eclipse launch configurations"

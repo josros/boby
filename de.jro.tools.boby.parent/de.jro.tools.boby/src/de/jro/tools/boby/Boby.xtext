@@ -1,0 +1,64 @@
+grammar de.jro.tools.Boby with org.eclipse.xtext.xbase.annotations.XbaseWithAnnotations
+
+generate bob "http://www.jro.de/tools/Boby"
+import "http://www.eclipse.org/Xtext/Xbase/XAnnotations"
+
+// affected by:
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=495975
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=495047
+// https://bugs.eclipse.org/bugs/show_bug.cgi?id=364910
+
+Domainmodel:
+	importSection=XImportSection?
+	elements+=AbstractElement*;
+
+AbstractElement:
+	ObjectY | Builder | PackageDeclaration // | Converter
+;
+
+PackageDeclaration:
+    'package' name=QualifiedName '{'
+        elements+=AbstractElement*
+    '}'
+;
+
+ObjectY:
+	(annotations+=XAnnotation)*
+	'boby' (immutable?='immutable')? name=ValidID ('extends' superType=JvmTypeReference)? '{' 
+		properties+=Property*
+	'}'
+;
+
+Property:
+	(annotations+=XAnnotation)*
+	name=ValidID ':' type=JvmTypeReference
+;
+
+Builder:
+	GenericBuilder | CreatorBuilder | MockerBuilder
+;
+
+
+GenericBuilder:
+	('generic' 'builder') name=ValidID 'for' bob=[ObjectY|QualifiedName]
+;
+
+CreatorBuilder:
+	('build' 'builder') name=ValidID 'extends' generic=[GenericBuilder|QualifiedName]
+;
+
+MockerBuilder:
+	('mock' 'builder') name=ValidID 'extends' generic=[GenericBuilder|QualifiedName]
+;
+
+// Wait until bug is fixed: https://bugs.eclipse.org/bugs/show_bug.cgi?id=495047
+//Converter:
+//	'converter' name=ValidID 'for' first=[ObjectY|QualifiedName] '<->' second=[ObjectY|QualifiedName] 
+//	('auto' | ('{'
+//		(mappings+=Mapping)*
+//	'}'))
+//;
+
+//Mapping:
+//	'map' source=[Property|QualifiedName] 'to' target=[Property|QualifiedName]
+//;

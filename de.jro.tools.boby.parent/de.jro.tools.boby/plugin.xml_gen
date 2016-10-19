@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+	<extension point="org.eclipse.emf.ecore.generated_package">
+		<package 
+			uri = "http://www.jro.de/tools/Boby"
+			class = "de.jro.tools.bob.BobPackage"
+			genModel = "model/generated/Boby.genmodel" />
+	</extension>
+</plugin>

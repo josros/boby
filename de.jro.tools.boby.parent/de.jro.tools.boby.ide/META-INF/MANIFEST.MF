@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: de.jro.tools.boby.ide
+Bundle-Vendor: My Company
+Bundle-Version: 1.0.0.qualifier
+Bundle-SymbolicName: de.jro.tools.boby.ide; singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: de.jro.tools.boby,
+ org.eclipse.xtext.ide,
+ org.eclipse.xtext.xbase.ide
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Export-Package: de.jro.tools.ide.contentassist.antlr,
+ de.jro.tools.ide.contentassist.antlr.internal
+
