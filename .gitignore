@@ -60,7 +60,7 @@ Desktop.ini
 
 *.pydevproject
 .metadata
-.project
+#.project # required otherwise we loose natures
 bin/**
 tmp/**
 tmp/**/*
@@ -69,7 +69,7 @@ tmp/**/*
 *.swp
 *~.nib
 local.properties
-.classpath
+#.classpath # required as well
 .settings/
 .loadpath
 .recommenders
