@@ -60,7 +60,7 @@ Desktop.ini
 
 *.pydevproject
 .metadata
-.project
+#.project # required otherwise we loose natures
 bin/**
 tmp/**
 tmp/**/*
@@ -69,7 +69,7 @@ tmp/**/*
 *.swp
 *~.nib
 local.properties
-.classpath
+#.classpath # required as well
 .settings/
 .loadpath
 .recommenders
@@ -81,9 +81,11 @@ local.properties
 # XText
 #######
 
-src-gen/**
-xtend-gen/**
-.xtendbin
+**/src-gen/**
+**/xtend-gen/**
+**.xtendbin
+!**/src-gen/.gitkeep
+!**/xtend-gen/.gitkeep
 
 
 # Locally stored "Eclipse launch configurations"
