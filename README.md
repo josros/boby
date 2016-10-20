@@ -28,7 +28,7 @@ representing an immutable value object, a generic and a concrete builder.
 # Executive Summary
 
 This executive summary describes how you install and use boby within your eclipse installation using a prebuilt update site. 
-In case you want to contribute, clone the repository and import existing maven projects in your Eclipse DSL istallation. To solve build errors, execute MWE2 workflow based on the file `GenerateBoby.mwe2` within the project `de.jro.tools.boby`. Note that .project, .classpath and .gitkeep files need to remain in the projects.
+In case you want to contribute, clone the repository, run `mvn install` in `boby/de.jro.tools.boby.parent`, afterwards import existing maven projects in your Eclipse DSL istallation. Note that .project and .classpath files need to remain in the projects.
 
 ### Prerequisites
 
