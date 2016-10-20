@@ -22,7 +22,17 @@ class BobyParsingTest{
 	@Test 
 	def void loadModel() {
 		val result = parseHelper.parse('''
-			Hello Xtext!
+			package de.jro.demo.serviceone.test {
+			
+			  boby immutable TestVO {
+			    test: String
+			    test2: Integer
+			  }
+			
+			  generic builder GenericTestVOBuilder for TestVO
+			  build builder TestVOBuilder extends GenericTestVOBuilder
+			
+			}
 		''')
 		Assert.assertNotNull(result)
 	}
