@@ -3,6 +3,14 @@
  */
 package de.jro.tools.validation
 
+import de.jro.tools.bob.AbstractElement
+import de.jro.tools.bob.BobPackage
+import de.jro.tools.bob.Domainmodel
+import de.jro.tools.bob.PackageDeclaration
+import de.jro.tools.util.EncapsulationAnalyzer
+import org.eclipse.emf.common.util.EList
+import org.eclipse.emf.ecore.EStructuralFeature
+import org.eclipse.xtext.validation.Check
 
 /**
  * This class contains custom validation rules. 
@@ -11,15 +19,44 @@ package de.jro.tools.validation
  */
 class BobyValidator extends AbstractBobyValidator {
 	
-//	public static val INVALID_NAME = 'invalidName'
-//
-//	@Check
-//	def checkGreetingStartsWithCapital(Greeting greeting) {
-//		if (!Character.isUpperCase(greeting.name.charAt(0))) {
-//			warning('Name should start with a capital', 
-//					BobyPackage.Literals.GREETING__NAME,
-//					INVALID_NAME)
-//		}
-//	}
+	public static val INVALID_NAME = 'invalidName'
+
+	@Check
+	def checkUniqueNamesInDomainModel(AbstractElement element) {
+		if(EncapsulationAnalyzer.isEObjectWithinContainer(element, PackageDeclaration)) {
+			var packageDec = EncapsulationAnalyzer.getContainerToEObject(element, PackageDeclaration)
+			checkUniqueNamesInPackage(element, packageDec)
+		} else {
+			// it's part of a domain model for sure
+			var domainModel = EncapsulationAnalyzer.getContainerToEObject(element, Domainmodel)
+			checkUniqueNameInDomainModel(element, domainModel)
+		}
+	}
+	
+	def checkUniqueNameInDomainModel(AbstractElement element, Domainmodel model) {
+		element.errorIfNotUnique(model.elements, BobPackage.Literals.ABSTRACT_ELEMENT__NAME)
+	}
+	
+	def checkUniqueNamesInPackage(AbstractElement element, PackageDeclaration packageDec) {
+		element.errorIfNotUnique(packageDec.elements, BobPackage.Literals.ABSTRACT_ELEMENT__NAME)
+	}
+	
+	def private errorIfNotUnique(AbstractElement el, EList<AbstractElement> all, EStructuralFeature feature) {
+		if(!el.isUniqueWithinElements(all)) {
+				error('Name must be unique in package or default scope',
+					feature,
+					INVALID_NAME
+				)
+			}
+	}
+	
+	def private boolean isUniqueWithinElements(AbstractElement el, EList<AbstractElement> all) {
+		for(cur : all) {
+			if(cur != el && cur.name.equals(el.name)) {
+				return false;
+			}
+		}
+		return true;
+	}
 	
 }
