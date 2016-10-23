@@ -5,11 +5,10 @@ package de.jro.tools.jvmmodel
 
 import com.google.inject.Inject
 import de.jro.tools.bob.ObjectY
-import java.util.List
+import de.jro.tools.util.SuperTypeAnalyzer
 import org.eclipse.emf.common.util.BasicEList
 import org.eclipse.emf.common.util.EList
 import org.eclipse.xtext.common.types.JvmConstructor
-import org.eclipse.xtext.common.types.JvmDeclaredType
 import org.eclipse.xtext.common.types.JvmField
 import org.eclipse.xtext.common.types.JvmFormalParameter
 import org.eclipse.xtext.common.types.JvmMember
@@ -18,7 +17,6 @@ import org.eclipse.xtext.naming.IQualifiedNameProvider
 import org.eclipse.xtext.xbase.jvmmodel.AbstractModelInferrer
 import org.eclipse.xtext.xbase.jvmmodel.IJvmDeclaredTypeAcceptor
 import org.eclipse.xtext.xbase.jvmmodel.JvmTypesBuilder
-import java.util.ArrayList
 
 /**
  * <p>Infers a JVM model from the source model.</p> 
@@ -35,6 +33,8 @@ class BobyJvmModelInferrer extends AbstractModelInferrer {
 	@Inject extension JvmTypesBuilder
 
 	@Inject extension IQualifiedNameProvider
+
+	@Inject SuperTypeAnalyzer superTypeAnalyzer
 
 	def dispatch void infer(ObjectY bob, IJvmDeclaredTypeAcceptor acceptor, boolean isPrelinkingPhase) {
 		acceptor.accept(bob.toClass(bob.fullyQualifiedName)) [
@@ -61,7 +61,7 @@ class BobyJvmModelInferrer extends AbstractModelInferrer {
 		]
 	}
 
-	def EList<JvmMember> inferMemberAttr(ObjectY bob) {
+	def private EList<JvmMember> inferMemberAttr(ObjectY bob) {
 		var EList<JvmMember> attributes = new BasicEList<JvmMember>();
 		for (property : bob.properties) {
 			var attributeField = property.toField(property.name, property.type)
@@ -76,29 +76,12 @@ class BobyJvmModelInferrer extends AbstractModelInferrer {
 		return attributes;
 	}
 
-	def JvmConstructor inferImmutableConstructor(ObjectY bob) {
+	def private JvmConstructor inferImmutableConstructor(ObjectY bob) {
 		bob.toConstructor [
-			val Iterable<JvmField> superTypeFinalFields = superTypeParameters(bob.superType)
+			
 			val StringBuilder strBuilder = new StringBuilder;
-
-			if (superTypeFinalFields != null) {
-				if (!superTypeFinalFields.empty) {
-					strBuilder.append("super(");
-				}
-				val superParamIterator = superTypeFinalFields.iterator;
-				while (superParamIterator.hasNext) {
-					val curProp = superParamIterator.next
-					parameters += curProp.toParameter(curProp.simpleName, curProp.type)
-					strBuilder.append(curProp.simpleName)
-					if (superParamIterator.hasNext) {
-						strBuilder.append(",")
-					}
-				}
-				if (!superTypeFinalFields.empty) {
-					strBuilder.append(");")
-					strBuilder.append(System.getProperty("line.separator"))
-				}
-			}
+			
+			handleSuperType(bob.superType, strBuilder, parameters)
 
 			val iterator = bob.properties.iterator
 			while (iterator.hasNext) {
@@ -113,18 +96,26 @@ class BobyJvmModelInferrer extends AbstractModelInferrer {
 		]
 	}
 
-	def List<JvmField> superTypeParameters(JvmTypeReference superType) {
-		var List<JvmField> fields = new ArrayList();
-		if (superType != null) {
-			if (superType.getType() instanceof JvmDeclaredType) {
-				var JvmDeclaredType declaredType = superType.getType() as JvmDeclaredType;
-				if (declaredType.extendedClass != null) {
-					fields.addAll(superTypeParameters(declaredType.extendedClass))
+	def private handleSuperType(JvmTypeReference superType, StringBuilder strBuilder, EList<JvmFormalParameter> parameters) {
+		val Iterable<JvmField> superTypeFinalFields = superTypeAnalyzer.superTypeFinalParametersRecursively(superType)
+		if (superTypeFinalFields != null) {
+			if (!superTypeFinalFields.empty) {
+				strBuilder.append("super(");
+			}
+			val superParamIterator = superTypeFinalFields.iterator;
+			while (superParamIterator.hasNext) {
+				val curProp = superParamIterator.next
+				parameters += curProp.toParameter(curProp.simpleName, curProp.type)
+				strBuilder.append(curProp.simpleName)
+				if (superParamIterator.hasNext) {
+					strBuilder.append(", ")
 				}
-				fields.addAll(declaredType.declaredFields) 
+			}
+			if (!superTypeFinalFields.empty) {
+				strBuilder.append(");")
+				strBuilder.append(System.getProperty("line.separator"))
 			}
 		}
-		return fields
 	}
 
 }

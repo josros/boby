@@ -8,7 +8,11 @@ import de.jro.tools.bob.MockerBuilder
 import de.jro.tools.bob.ObjectY
 import de.jro.tools.bob.Property
 import de.jro.tools.jvmmodel.BobyJvmModelInferrer
+import de.jro.tools.util.SuperTypeAnalyzer
+import java.util.Iterator
+import java.util.function.Function
 import org.eclipse.emf.ecore.resource.Resource
+import org.eclipse.xtext.common.types.JvmField
 import org.eclipse.xtext.common.types.JvmTypeReference
 import org.eclipse.xtext.generator.IFileSystemAccess
 import org.eclipse.xtext.naming.IQualifiedNameProvider
@@ -17,22 +21,29 @@ import org.eclipse.xtext.xbase.compiler.JvmModelGenerator
 import org.eclipse.xtext.xbase.compiler.StringBuilderBasedAppendable
 import org.eclipse.xtext.xbase.compiler.TypeReferenceSerializer
 
+/**
+ * Responsible for generation of builders, uses BobyJvmModelInferrer to
+ * compile remaining part of the model.
+ * 
+ * @author Rossa
+ */
 class BobyGenerator extends JvmModelGenerator {
 
 	@Inject extension IQualifiedNameProvider
 	@Inject extension TypeReferenceSerializer
 	@Inject BobyJvmModelInferrer inferrer
+	@Inject SuperTypeAnalyzer superTypeAnalyzer
 
 	override void doGenerate(Resource resource, IFileSystemAccess fsa) {
 		super.doGenerate(resource, fsa)
 		for (b : resource.allContents.toIterable.filter(typeof(Builder))) {
-			if(b != null) {
-				fsa.generateFile(b.fullyQualifiedName.toString("/") + ".java", b.compile)	
+			if (b != null) {
+				fsa.generateFile(b.fullyQualifiedName.toString("/") + ".java", b.compile)
 			}
 		}
 	}
 
-	def compile(Builder it) '''
+	def private compile(Builder it) '''
 		«val importManager = new ImportManager(true)» 
 		«val body = body(importManager)»
 		«IF eContainer != null»
@@ -46,57 +57,128 @@ class BobyGenerator extends JvmModelGenerator {
 		«body»
 	'''
 
-	def body(Builder it, ImportManager importManager) {
+	def private body(Builder it, ImportManager importManager) {
 		if (it instanceof GenericBuilder) {
 			generic(it, importManager)
 		} else if (it instanceof CreatorBuilder) {
 			creator(it, importManager)
 		} else if (it instanceof MockerBuilder) {
-			mocker(it, importManager)
+			mocker(it)
 		}
 	}
 
-	def mocker(MockerBuilder mock, ImportManager importManager) '''
+// mock builder
+
+	def private mocker(MockerBuilder mock) '''
 		import org.mockito.Mockito;
 		
+		@SuppressWarnings("all")
 		public class «mock.name» extends «mock.generic.fullyQualifiedName»<«mock.name»> {
-		  «mockMethod(mock.generic.bob, importManager)»
+		  «mockMethod(mock.generic.bob)»
+		  
+		  «spyMethod(mock.generic.bob)»
 		}
 	'''
 
-	def mockMethod(ObjectY ob, ImportManager manager) '''
+	def private mockMethod(ObjectY ob) '''
 		public «ob.fullyQualifiedName» mock() {
 		   «ob.fullyQualifiedName» mockObj = Mockito.mock(«ob.fullyQualifiedName».class);
-		   «FOR prop : ob.properties»
-		   	«mockParameter(prop, manager)»
-		   «ENDFOR»
+		   «var Function<String, String> mockFunction = [ String s | s.mockParameter ]»
+		   «applyForAttributes(ob, mockFunction)»
 		   return mockObj;
 		}
 	'''
-
-	def mockParameter(Property property, ImportManager manager) '''
-		Mockito.when(mockObj.get«property.name.toString.toFirstUpper»()).thenReturn(«property.name»);
-	'''
-
-	def firstToUpperCase(Property property) {
-		return property.name.toString.toFirstUpper
-	}
-
-	def creator(CreatorBuilder it, ImportManager importManager) '''
-		public class «it.name» extends «it.generic.fullyQualifiedName»<«it.name»> {
-		  «buildMethod(it.generic.bob, importManager)»
+	
+	def private spyMethod(ObjectY ob) '''
+		public «ob.fullyQualifiedName» spy() {
+		   «ob.fullyQualifiedName» spyObj = Mockito.spy(«ob.fullyQualifiedName».class);
+		   «var Function<String, String> spyFunction = [ String s | s.spyParameter ]»
+		   «applyForAttributes(ob, spyFunction)»
+		   return spyObj;
 		}
 	'''
+	
 
-	def buildMethod(ObjectY ob, ImportManager manager) '''
-		public «ob.fullyQualifiedName» build() {
-		  return new «ob.fullyQualifiedName»(«ob.parameters(manager)»);
-		}
+	def private String spyParameter(String name) '''
+		Mockito.doReturn(«name»).when(spyObj).get«name.toFirstUpper»();
 	'''
 
-	def parameters(ObjectY ob, ImportManager manager) {
+	def private applyForAttributes(ObjectY ob, Function<String, String> applyingFunction) {
 		val strBuild = new StringBuilder
 		val propIterator = ob.properties.iterator
+		if (ob.superType != null) {
+			var Iterator<JvmField> patIterator = parentAttributes(ob).iterator
+			while (patIterator.hasNext) {
+				var JvmField field = patIterator.next
+				strBuild.append(applyingFunction.apply(field.simpleName))
+			}
+		}
+		while (propIterator.hasNext) {
+			strBuild.append(applyingFunction.apply(propIterator.next.name))
+		}
+		strBuild.toString
+	}
+
+	def private String mockParameter(String name) '''
+		Mockito.when(mockObj.get«name.toFirstUpper»()).thenReturn(«name»);
+	'''
+
+// build builder
+
+	def private creator(CreatorBuilder it, ImportManager importManager) '''
+		@SuppressWarnings("all")
+		public class «it.name» extends «it.generic.fullyQualifiedName»<«it.name»> {
+		  «buildMethod(it.generic.bob)»
+		}
+	'''
+
+	def private buildMethod(ObjectY ob) '''
+		public «ob.fullyQualifiedName» build() {
+		  «IF ob.immutable»
+		  	«buildMethodImmutable(ob)»
+		  «ELSE»
+		  	«buildMethodWithSetters(ob)»
+		  «ENDIF»
+		}
+	'''
+
+	def private buildMethodImmutable(ObjectY ob) '''
+		return new «ob.fullyQualifiedName»(«ob.parameters()»);
+	'''
+
+	def private buildMethodWithSetters(ObjectY ob) '''
+		«ob.fullyQualifiedName» obj = new «ob.fullyQualifiedName»();
+		«val strBuild = new StringBuilder»
+		«parentSetter(ob, strBuild)»
+		«objSetter(ob, strBuild)»
+		«strBuild.toString»
+		return obj;
+	'''
+
+	def private parentSetter(ObjectY ob, StringBuilder strBuild) {
+		var Iterator<JvmField> patIterator = parentAttributes(ob).iterator
+		while (patIterator.hasNext) {
+			var JvmField field = patIterator.next
+			strBuild.append(setter(field.simpleName))
+		}
+	}
+
+	def private objSetter(ObjectY ob, StringBuilder strBuild) {
+		ob.properties.forEach [
+			strBuild.append(setter(it.name))
+		]
+	}
+
+	def private setter(String attrName) '''
+		obj.set«firstToUpperCase(attrName)»(«attrName»);
+	'''
+
+	def private parameters(ObjectY ob) {
+		val strBuild = new StringBuilder
+		val propIterator = ob.properties.iterator
+		if (ob.superType != null) {
+			appendParentParameters(strBuild, ob, propIterator.hasNext)
+		}
 		while (propIterator.hasNext) {
 			strBuild.append(propIterator.next.name)
 			if (propIterator.hasNext) {
@@ -106,7 +188,23 @@ class BobyGenerator extends JvmModelGenerator {
 		strBuild.toString
 	}
 
-	def generic(GenericBuilder it, ImportManager importManager) '''
+	def private appendParentParameters(StringBuilder strBuild, ObjectY ob, boolean hasMore) {
+		var Iterator<JvmField> patIterator = parentAttributes(ob).iterator
+		while (patIterator.hasNext) {
+			var JvmField field = patIterator.next
+			strBuild.append(field.simpleName)
+			if (patIterator.hasNext) {
+				strBuild.append(",")
+			} else if (hasMore) {
+				strBuild.append(",")
+			}
+		}
+	}
+
+//generic builder
+
+	def private generic(GenericBuilder it, ImportManager importManager) '''
+		@SuppressWarnings("all")
 		public class «it.name»<B extends «it.name»<B>> {
 		  «attributes(it.bob, importManager)»
 		  
@@ -114,24 +212,40 @@ class BobyGenerator extends JvmModelGenerator {
 		}
 	'''
 
-	def attributes(ObjectY ob, ImportManager importManager) {
+	def private attributes(ObjectY ob, ImportManager importManager) {
 		val strBuild = new StringBuilder
+		if (ob.superType != null) {
+			appendParentAttributes(strBuild, ob, importManager)
+		}
 		val propIterator = ob.properties.iterator
 		while (propIterator.hasNext) {
-			strBuild.append(attribute(propIterator.next, importManager))
+			var Property curProp = propIterator.next
+			strBuild.append(attribute(curProp.type, curProp.name, importManager))
 		}
 		strBuild.toString
 	}
 
-	def attribute(Property property, ImportManager importManager) '''
-		protected «property.type.shortName(importManager)» «property.name»;
+	def private appendParentAttributes(StringBuilder strBuild, ObjectY ob, ImportManager importManager) {
+		var Iterator<JvmField> patIterator = parentAttributes(ob).iterator
+		while (patIterator.hasNext) {
+			var JvmField field = patIterator.next
+			strBuild.append(attribute(field.type, field.simpleName, importManager))
+		}
+	}
+
+	def private attribute(JvmTypeReference type, String name, ImportManager importManager) '''
+		protected «type.shortName(importManager)» «name»;
 	'''
 
-	def methodsGeneric(ObjectY ob, ImportManager importManager) {
+	def private methodsGeneric(ObjectY ob, ImportManager importManager) {
 		val strBuild = new StringBuilder
+		if (ob.superType != null) {
+			appendParentMethods(strBuild, ob, importManager)
+		}
 		val propIterator = ob.properties.iterator
 		while (propIterator.hasNext) {
-			strBuild.append(methodGeneric(propIterator.next, importManager))
+			var Property curProp = propIterator.next
+			strBuild.append(methodGeneric(curProp.type, curProp.name, importManager))
 			if (propIterator.hasNext) {
 				strBuild.append(System.getProperty("line.separator"))
 			}
@@ -139,18 +253,40 @@ class BobyGenerator extends JvmModelGenerator {
 		strBuild.toString
 	}
 
-	def methodGeneric(Property property, ImportManager importManager) '''
+	def private appendParentMethods(StringBuilder strBuild, ObjectY ob, ImportManager importManager) {
+		var Iterator<JvmField> patIterator = parentAttributes(ob).iterator
+		while (patIterator.hasNext) {
+			var JvmField field = patIterator.next
+			strBuild.append(methodGeneric(field.type, field.simpleName, importManager))
+		}
+	}
+
+	def private methodGeneric(JvmTypeReference type, String name, ImportManager importManager) '''
 		@SuppressWarnings("unchecked")
-		public B «property.name»(«property.type.shortName(importManager)» «property.name») {
-		  this.«property.name» = «property.name»;
+		public B «name»(«type.shortName(importManager)» «name») {
+		  this.«name» = «name»;
 		  return (B) this;
 		}
 	'''
 
-	def shortName(JvmTypeReference ref, ImportManager importManager) {
+// Utilities
+
+	def private Iterable<JvmField> parentAttributes(ObjectY ob) {
+		if (ob.immutable) {
+			superTypeAnalyzer.superTypeFinalParametersRecursively(ob.superType)
+		} else {
+			superTypeAnalyzer.superTypeParametersRecursivelyWithPredicate(ob.superType, [!it.isStatic && !it.isFinal])
+		}
+	}
+
+	def private shortName(JvmTypeReference ref, ImportManager importManager) {
 		val result = new StringBuilderBasedAppendable(importManager)
 		ref.serialize(ref.eContainer, result);
 		result.toString
+	}
+
+	def private firstToUpperCase(String name) {
+		return name.toString.toFirstUpper
 	}
 
 }
