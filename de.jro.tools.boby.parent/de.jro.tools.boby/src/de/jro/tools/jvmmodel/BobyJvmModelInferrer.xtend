@@ -5,10 +5,14 @@ package de.jro.tools.jvmmodel
 
 import com.google.inject.Inject
 import de.jro.tools.bob.ObjectY
+import de.jro.tools.util.SuperTypeAnalyzer
 import org.eclipse.emf.common.util.BasicEList
 import org.eclipse.emf.common.util.EList
 import org.eclipse.xtext.common.types.JvmConstructor
+import org.eclipse.xtext.common.types.JvmField
+import org.eclipse.xtext.common.types.JvmFormalParameter
 import org.eclipse.xtext.common.types.JvmMember
+import org.eclipse.xtext.common.types.JvmTypeReference
 import org.eclipse.xtext.naming.IQualifiedNameProvider
 import org.eclipse.xtext.xbase.jvmmodel.AbstractModelInferrer
 import org.eclipse.xtext.xbase.jvmmodel.IJvmDeclaredTypeAcceptor
@@ -29,12 +33,13 @@ class BobyJvmModelInferrer extends AbstractModelInferrer {
 	@Inject extension JvmTypesBuilder
 
 	@Inject extension IQualifiedNameProvider
-	
+
+	@Inject SuperTypeAnalyzer superTypeAnalyzer
 
 	def dispatch void infer(ObjectY bob, IJvmDeclaredTypeAcceptor acceptor, boolean isPrelinkingPhase) {
 		acceptor.accept(bob.toClass(bob.fullyQualifiedName)) [
 			documentation = bob.documentation
-			for(annotation : bob.annotations) {
+			for (annotation : bob.annotations) {
 				annotations += annotation.jvmAnnotationReference
 			}
 			if (bob.superType != null) {
@@ -50,17 +55,17 @@ class BobyJvmModelInferrer extends AbstractModelInferrer {
 			for (property : bob.properties) {
 				members += property.toGetter(property.name, property.type)
 				if (!bob.immutable) {
-					members += property.toSetter(property.name, property.type)	
+					members += property.toSetter(property.name, property.type)
 				}
 			}
 		]
 	}
 
-	def EList<JvmMember> inferMemberAttr(ObjectY bob) {
+	def private EList<JvmMember> inferMemberAttr(ObjectY bob) {
 		var EList<JvmMember> attributes = new BasicEList<JvmMember>();
 		for (property : bob.properties) {
 			var attributeField = property.toField(property.name, property.type)
-			for(annotation : property.annotations) {
+			for (annotation : property.annotations) {
 				attributeField.annotations += annotation.jvmAnnotationReference
 			}
 			if (bob.immutable) {
@@ -71,9 +76,13 @@ class BobyJvmModelInferrer extends AbstractModelInferrer {
 		return attributes;
 	}
 
-	def JvmConstructor inferImmutableConstructor(ObjectY bob) {
+	def private JvmConstructor inferImmutableConstructor(ObjectY bob) {
 		bob.toConstructor [
+			
 			val StringBuilder strBuilder = new StringBuilder;
+			
+			handleSuperType(bob.superType, strBuilder, parameters)
+
 			val iterator = bob.properties.iterator
 			while (iterator.hasNext) {
 				val curProp = iterator.next
@@ -86,6 +95,27 @@ class BobyJvmModelInferrer extends AbstractModelInferrer {
 			body = '''«strBuilder.toString»'''
 		]
 	}
-	
-	
+
+	def private handleSuperType(JvmTypeReference superType, StringBuilder strBuilder, EList<JvmFormalParameter> parameters) {
+		val Iterable<JvmField> superTypeFinalFields = superTypeAnalyzer.superTypeFinalParametersRecursively(superType)
+		if (superTypeFinalFields != null) {
+			if (!superTypeFinalFields.empty) {
+				strBuilder.append("super(");
+			}
+			val superParamIterator = superTypeFinalFields.iterator;
+			while (superParamIterator.hasNext) {
+				val curProp = superParamIterator.next
+				parameters += curProp.toParameter(curProp.simpleName, curProp.type)
+				strBuilder.append(curProp.simpleName)
+				if (superParamIterator.hasNext) {
+					strBuilder.append(", ")
+				}
+			}
+			if (!superTypeFinalFields.empty) {
+				strBuilder.append(");")
+				strBuilder.append(System.getProperty("line.separator"))
+			}
+		}
+	}
+
 }
