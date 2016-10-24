@@ -82,6 +82,8 @@ If you are working in a boby project, eclipse generates the following files for 
 
 ## What boby generates:
 
+```java
+
 	package de.jro.example.persistence;
 	
 	import de.jro.demo.db.data.AbstractEntity;
@@ -113,8 +115,12 @@ If you are working in a boby project, eclipse generates the following files for 
 	    this.age = age;
 	  }
 	}
+	
+```
 
 src-gen/_de.jro.example.persistence.PersonEntity.java_
+
+```java
 
 	package de.jro.example.persistence;
 	
@@ -156,7 +162,11 @@ src-gen/_de.jro.example.persistence.PersonEntity.java_
 	  }
 	}
 
+```
+
 src-gen/_de.jro.example.persistence.GenericPersonEntityBuilder.java_
+
+```java
 
 	package de.jro.example.persistence;
 	
@@ -174,7 +184,11 @@ src-gen/_de.jro.example.persistence.GenericPersonEntityBuilder.java_
 	  }
 	}
 
+```
+
 src-gen/_de.jro.example.persistence.PersonEntityBuilder.java_
+
+```java
 
 	package de.jro.example.business;
 	
@@ -205,7 +219,11 @@ src-gen/_de.jro.example.persistence.PersonEntityBuilder.java_
 	  }
 	}
 	
+```
+	
 src-gen/_de.jro.example.business.PersonVO.java_
+
+```java
 
 	package de.jro.example.business;
 	
@@ -234,9 +252,12 @@ src-gen/_de.jro.example.business.PersonVO.java_
 	    return (B) this;
 	  }
 	}
+	
+```
 
 src-gen/_de.jro.example.business.GenericPersonVOBuilder.java_
 
+```java
 
 	package de.jro.example.business;
 	
@@ -247,8 +268,12 @@ src-gen/_de.jro.example.business.GenericPersonVOBuilder.java_
 	    return new de.jro.example.business.PersonVO(id,name,age);
 	  }
 	}
-	
+
+```
+
 src-gen/_de.jro.example.business.PersonVOBuilder.java_
+
+```java
 
 	package de.jro.example.rest;
 	
@@ -279,8 +304,12 @@ src-gen/_de.jro.example.business.PersonVOBuilder.java_
 	    this.age = age;
 	  }
 	}
+	
+```
 
 src-gen/_de.jro.example.rest.PersonDTO.java_
+
+```java
 
 	package de.jro.example.rest;
 	
@@ -298,8 +327,12 @@ src-gen/_de.jro.example.rest.PersonDTO.java_
 	    this.id = id;
 	  }
 	}
+	
+```
 
 src-gen/_de.jro.example.rest.PersonIdDTO.java_
+
+```java
 
 	package de.jro.example.rest;
 	
@@ -327,7 +360,11 @@ src-gen/_de.jro.example.rest.PersonIdDTO.java_
 	  }
 	}
 
+```
+
 src-gen/_de.jro.example.rest.GenericPersonIdDTOBuilder.java_
+
+```java
 
 	package de.jro.example.rest;
 	
@@ -342,9 +379,12 @@ src-gen/_de.jro.example.rest.GenericPersonIdDTOBuilder.java_
 	    return obj;
 	  }
 	}
+	
+```
 
 src-gen/_de.jro.example.rest.PersonIdDTOBuilder.java_
 
+```java
 
 	package de.jro.example.test.persistence;
 	
@@ -373,9 +413,12 @@ src-gen/_de.jro.example.rest.PersonIdDTOBuilder.java_
 	     return spyObj;
 	  }
 	}
+	
+```
 
 src-gen/_de.jro.example.test.persistence.PersonEntityMocker.java_
 
+```java
 
 	package de.jro.example.test.business;
 	
@@ -401,7 +444,11 @@ src-gen/_de.jro.example.test.persistence.PersonEntityMocker.java_
 	  }
 	}
 
+```
+
 src-gen/_de.jro.example.test.business.PersonVOMocker.java_
+
+```java
 
 	package de.jro.example.test.rest;
 	
@@ -426,6 +473,8 @@ src-gen/_de.jro.example.test.business.PersonVOMocker.java_
 	     return spyObj;
 	  }
 	}
+
+```
 	
 src-gen/_de.jro.example.test.rest.PersonIdDTOMocker.java_
 
