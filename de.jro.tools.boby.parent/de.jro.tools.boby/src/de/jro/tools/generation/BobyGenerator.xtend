@@ -68,7 +68,6 @@ class BobyGenerator extends JvmModelGenerator {
 	}
 
 // mock builder
-
 	def private mocker(MockerBuilder mock) '''
 		import org.mockito.Mockito;
 		
@@ -83,48 +82,55 @@ class BobyGenerator extends JvmModelGenerator {
 	def private mockMethod(ObjectY ob) '''
 		public «ob.fullyQualifiedName» mock() {
 		   «ob.fullyQualifiedName» mockObj = Mockito.mock(«ob.fullyQualifiedName».class);
-		   «var Function<String, String> mockFunction = [ String s | s.mockParameter ]»
+		   «var Function<TypedParameter, String> mockFunction = [ TypedParameter p | p.mockParameter ]»
 		   «applyForAttributes(ob, mockFunction)»
 		   return mockObj;
 		}
 	'''
-	
+
 	def private spyMethod(ObjectY ob) '''
 		public «ob.fullyQualifiedName» spy() {
 		   «ob.fullyQualifiedName» spyObj = Mockito.spy(«ob.fullyQualifiedName».class);
-		   «var Function<String, String> spyFunction = [ String s | s.spyParameter ]»
+		   «var Function<TypedParameter, String> spyFunction = [ TypedParameter p | p.spyParameter ]»
 		   «applyForAttributes(ob, spyFunction)»
 		   return spyObj;
 		}
 	'''
-	
 
-	def private String spyParameter(String name) '''
-		Mockito.doReturn(«name»).when(spyObj).get«name.toFirstUpper»();
+	def private String spyParameter(TypedParameter param) '''
+		«IF param.typeRef.is(boolean)»
+			Mockito.doReturn(«param.name»).when(spyObj).is«param.name.toFirstUpper»();
+		«ELSE»
+			Mockito.doReturn(«param.name»).when(spyObj).get«param.name.toFirstUpper»();
+		«ENDIF»
 	'''
 
-	def private applyForAttributes(ObjectY ob, Function<String, String> applyingFunction) {
+	def private applyForAttributes(ObjectY ob, Function<TypedParameter, String> applyingFunction) {
 		val strBuild = new StringBuilder
 		val propIterator = ob.properties.iterator
 		if (ob.superType != null) {
 			var Iterator<JvmField> patIterator = parentAttributes(ob).iterator
 			while (patIterator.hasNext) {
 				var JvmField field = patIterator.next
-				strBuild.append(applyingFunction.apply(field.simpleName))
+				strBuild.append(applyingFunction.apply(new TypedParameter(field.type, field.simpleName)))
 			}
 		}
 		while (propIterator.hasNext) {
-			strBuild.append(applyingFunction.apply(propIterator.next.name))
+			val Property prop = propIterator.next
+			strBuild.append(applyingFunction.apply(new TypedParameter(prop.type, prop.name)))
 		}
 		strBuild.toString
 	}
 
-	def private String mockParameter(String name) '''
-		Mockito.when(mockObj.get«name.toFirstUpper»()).thenReturn(«name»);
+	def private String mockParameter(TypedParameter param) '''
+		«IF param.typeRef.is(boolean)»
+			Mockito.when(mockObj.is«param.name.toFirstUpper»()).thenReturn(«param.name»);
+		«ELSE»
+			Mockito.when(mockObj.get«param.name.toFirstUpper»()).thenReturn(«param.name»);
+		«ENDIF»
 	'''
 
 // build builder
-
 	def private creator(CreatorBuilder it, ImportManager importManager) '''
 		@SuppressWarnings("all")
 		public class «it.name» extends «it.generic.fullyQualifiedName»<«it.name»> {
@@ -202,7 +208,6 @@ class BobyGenerator extends JvmModelGenerator {
 	}
 
 //generic builder
-
 	def private generic(GenericBuilder it, ImportManager importManager) '''
 		@SuppressWarnings("all")
 		public class «it.name»<B extends «it.name»<B>> {
@@ -270,7 +275,6 @@ class BobyGenerator extends JvmModelGenerator {
 	'''
 
 // Utilities
-
 	def private Iterable<JvmField> parentAttributes(ObjectY ob) {
 		if (ob.immutable) {
 			superTypeAnalyzer.superTypeFinalParametersRecursively(ob.superType)
@@ -287,6 +291,16 @@ class BobyGenerator extends JvmModelGenerator {
 
 	def private firstToUpperCase(String name) {
 		return name.toString.toFirstUpper
+	}
+
+	private static class TypedParameter {
+		final JvmTypeReference typeRef;
+		final String name;
+
+		new(JvmTypeReference typeRef, String name) {
+			this.typeRef = typeRef
+			this.name = name
+		}
 	}
 
 }
