@@ -23,7 +23,7 @@ And **boby** generates three classes for you:
 * src-gen/de.jro.demo.serviceone.test.TestVOBuilder
 
 representing an immutable value object, a generic and a concrete builder.
-So see a **more comprehensive example** go [there](example.md).
+To see a **more comprehensive example** go [there](example.md).
 
 
 # Executive Summary
