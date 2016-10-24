@@ -1,4 +1,4 @@
-# Boby beta test
+# Boby DSL
 
 This is a first demonstration version of the **boby** (builder and objects y) DSL.
 As the name suggests **boby** creates classes for (immutable) data containers and its builders.
@@ -23,6 +23,7 @@ And **boby** generates three classes for you:
 * src-gen/de.jro.demo.serviceone.test.TestVOBuilder
 
 representing an immutable value object, a generic and a concrete builder.
+So see a **more comprehensive example** go [there](example.md).
 
 
 # Executive Summary
@@ -67,4 +68,4 @@ See known issues to solve the **null error**.
 
 2. Content assist leads to "<reference> cannot be resolved." in relative scenarios. This issue seems to be related to: https://bugs.eclipse.org/bugs/show_bug.cgi?id=495047
 
-3. org.eclipse.xtext.validation.NamesAreUniqueValidator does not work due to: https://bugs.eclipse.org/bugs/show_bug.cgi?id=364910
+3. org.eclipse.xtext.validation.NamesAreUniqueValidator does not work due to: https://bugs.eclipse.org/bugs/show_bug.cgi?id=364910 (The development of custom validation has been started)
