@@ -1,0 +1,70 @@
+import de.jro.demo.db.data.AbstractEntity
+import javax.persistence.Column
+import javax.persistence.Entity
+import javax.validation.constraints.Min
+import javax.validation.constraints.NotNull
+
+package de.jro.example {
+	
+	package persistence {
+		
+		@Entity(name = "Person")
+		boby PersonEntity extends AbstractEntity {
+			@Column(name = "name")
+			name: String
+			@Column(name = "age")
+			age: Integer
+		}
+		
+		generic builder GenericPersonEntityBuilder for PersonEntity
+		build builder PersonEntityBuilder extends GenericPersonEntityBuilder
+		
+	}
+	
+	package business {
+		
+		boby immutable PersonVO {
+			id: Long
+			name: String
+			age: Integer
+		}
+		
+		generic builder GenericPersonVOBuilder for PersonVO
+		build builder PersonVOBuilder extends GenericPersonVOBuilder
+		
+	}
+	
+	package rest {
+		
+		boby PersonDTO {
+			@NotNull(message = "name must be set.")
+			name: String
+			@Min(value = 0)
+			age: Integer
+		}
+		
+		boby PersonIdDTO extends PersonDTO {
+			id: Long
+		}
+		
+		generic builder GenericPersonIdDTOBuilder for PersonIdDTO
+		build builder PersonIdDTOBuilder extends GenericPersonIdDTOBuilder
+	}
+	
+}
+
+package de.jro.example.test {
+	
+	package persistence {
+		mock builder PersonEntityMocker extends de.jro.example.persistence.GenericPersonEntityBuilder
+	}
+	
+	package business {
+		mock builder PersonVOMocker extends de.jro.example.business.GenericPersonVOBuilder
+	}
+	
+	package rest {
+		mock builder PersonIdDTOMocker extends de.jro.example.rest.GenericPersonIdDTOBuilder
+	}
+	
+}
