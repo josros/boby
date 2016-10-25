@@ -4,8 +4,8 @@
 package de.jro.tools
 
 import de.jro.tools.generation.BobyGenerator
-import org.eclipse.xtext.generator.IGenerator
 import de.jro.tools.util.SuperTypeAnalyzer
+import org.eclipse.xtext.generator.IGenerator
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.

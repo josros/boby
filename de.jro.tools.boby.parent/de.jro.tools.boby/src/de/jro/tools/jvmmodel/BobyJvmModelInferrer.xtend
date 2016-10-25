@@ -6,14 +6,18 @@ package de.jro.tools.jvmmodel
 import com.google.inject.Inject
 import de.jro.tools.bob.ObjectY
 import de.jro.tools.util.SuperTypeAnalyzer
+import java.util.List
 import org.eclipse.emf.common.util.BasicEList
 import org.eclipse.emf.common.util.EList
 import org.eclipse.xtext.common.types.JvmConstructor
 import org.eclipse.xtext.common.types.JvmField
 import org.eclipse.xtext.common.types.JvmFormalParameter
 import org.eclipse.xtext.common.types.JvmMember
+import org.eclipse.xtext.common.types.JvmOperation
 import org.eclipse.xtext.common.types.JvmTypeReference
+import org.eclipse.xtext.common.types.util.TypeReferences
 import org.eclipse.xtext.naming.IQualifiedNameProvider
+import org.eclipse.xtext.util.Strings
 import org.eclipse.xtext.xbase.jvmmodel.AbstractModelInferrer
 import org.eclipse.xtext.xbase.jvmmodel.IJvmDeclaredTypeAcceptor
 import org.eclipse.xtext.xbase.jvmmodel.JvmTypesBuilder
@@ -35,6 +39,8 @@ class BobyJvmModelInferrer extends AbstractModelInferrer {
 	@Inject extension IQualifiedNameProvider
 
 	@Inject SuperTypeAnalyzer superTypeAnalyzer
+	
+	@Inject extension TypeReferences
 
 	def dispatch void infer(ObjectY bob, IJvmDeclaredTypeAcceptor acceptor, boolean isPrelinkingPhase) {
 		acceptor.accept(bob.toClass(bob.fullyQualifiedName)) [
@@ -58,6 +64,7 @@ class BobyJvmModelInferrer extends AbstractModelInferrer {
 					members += property.toSetter(property.name, property.type)
 				}
 			}
+			members += bob.inferToString
 		]
 	}
 
@@ -117,5 +124,45 @@ class BobyJvmModelInferrer extends AbstractModelInferrer {
 			}
 		}
 	}
+	
+	def private JvmMember inferToString(ObjectY bob) {
+		var JvmTypeReference returnType = typeRef(String);
+		
+		var JvmOperation operation = bob.toMethod("toString",  returnType) [
+			annotations += annotationRef(Override)
+			body = '''«bob.createToStringBody»'''
+			
+		]
+		return operation;
+	}
+	
+	def private String createToStringBody(ObjectY bob) {
+		var StringBuilder strBuilder = new StringBuilder
+		strBuilder.append('''StringBuilder strBuilder = new StringBuilder();
+		''')
+		strBuilder.append('''strBuilder.append("[");
+		''');
+		if(bob.superType != null) {
+			var List<JvmField> parentParameters = superTypeAnalyzer.superTypeParametersRecursivelyWithPredicate(bob.superType, [!it.isStatic])
+			for(field : parentParameters) {
+				strBuilder.append(parameterInToString(field.type, field.simpleName))
+			}
+		}
+		for(prop : bob.properties) {
+			strBuilder.append(parameterInToString(prop.type, prop.name))
+		}
+		strBuilder.append('''strBuilder.append("]");
+		''');
+		strBuilder.append('''return strBuilder.toString();''')
+		strBuilder.toString
+	}
+	
+	def private parameterInToString(JvmTypeReference ref, String name) '''
+		«IF ref.is(boolean)»
+			strBuilder.append(" «name»: " + is«Strings.toFirstUpper(name)»());
+		«ELSE»
+			strBuilder.append(" «name»: " + get«Strings.toFirstUpper(name)»());
+		«ENDIF»
+	'''
 
 }
