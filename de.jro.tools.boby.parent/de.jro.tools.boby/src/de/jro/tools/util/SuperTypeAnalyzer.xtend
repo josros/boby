@@ -22,7 +22,7 @@ class SuperTypeAnalyzer {
 			if (superType.getType() instanceof JvmDeclaredType) {
 				var JvmDeclaredType declaredType = superType.getType() as JvmDeclaredType;
 				if (declaredType.extendedClass != null) {
-					fields.addAll(superTypeFinalParametersRecursively(declaredType.extendedClass))
+					fields.addAll(superTypeParametersRecursivelyWithPredicate(declaredType.extendedClass, predicate))
 				}
 				fields.addAll(declaredType.declaredFields.filter(predicate)) 
 			}
