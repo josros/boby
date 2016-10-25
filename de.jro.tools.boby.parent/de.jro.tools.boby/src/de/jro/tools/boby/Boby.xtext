@@ -27,6 +27,7 @@ ObjectY:
 	'boby' (immutable?='immutable')? name=ValidID ('extends' superType=JvmTypeReference)? '{' 
 		properties+=Property*
 	'}'
+	(noToString?='noToString')?
 ;
 
 Property:

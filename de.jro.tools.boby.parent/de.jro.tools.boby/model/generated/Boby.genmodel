@@ -21,6 +21,7 @@
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Boby.ecore#//ObjectY/immutable"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Boby.ecore#//ObjectY/superType"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Boby.ecore#//ObjectY/properties"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute Boby.ecore#//ObjectY/noToString"/>
     </genClasses>
     <genClasses ecoreClass="Boby.ecore#//Property">
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference Boby.ecore#//Property/annotations"/>

@@ -64,7 +64,9 @@ class BobyJvmModelInferrer extends AbstractModelInferrer {
 					members += property.toSetter(property.name, property.type)
 				}
 			}
-			members += bob.inferToString
+			if (!bob.noToString) {
+				members += bob.inferToString
+			}
 		]
 	}
 
