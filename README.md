@@ -1,3 +1,5 @@
+_This project is continued in a private repository. Feel free to ask the author if you are interested in features such as IntelliJ support or test/src code separation._
+
 # Boby DSL
 
 This is a first demonstration version of the **boby** (builder and objects y) DSL.
